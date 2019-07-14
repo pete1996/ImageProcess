@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     # 选择面布
     n.add_container(BIN_NORMAL)
-    # 运行计算
+    # 运行计算2
     n.run()
 
     # 设计退出条件
