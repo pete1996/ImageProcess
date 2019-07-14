@@ -71,8 +71,8 @@ class Nester:
             total_area += shape['area']
             self.shapes.append(shape)
 
-         #如果是一般布，需要这个尺寸
-         self.shapes_max_length = total_area / BIN_HEIGHT * 3
+        #如果是一般布，需要这个尺寸
+        self.shapes_max_length = total_area / BIN_HEIGHT * 3
 
     def add_container(self, container):
         """add_container(object): adds a polygon objects as the container"""
