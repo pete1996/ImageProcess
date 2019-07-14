@@ -12,7 +12,6 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from settings import SPACING, ROTATIONS, BIN_HEIGHT, POPULATION_SIZE, MUTA_RATE
 
-
 class Nester:
     def __init__(self, container=None, shapes=None):
         """Nester([container,shapes]): Creates a nester object with a container
@@ -57,6 +56,7 @@ class Nester:
         total_area = 0
         for obj in objects:
             points = self.clean_polygon(obj)
+            #print(points)
             shape = {
                 'area': 0,
                 'p_id': str(p_id),
@@ -71,8 +71,8 @@ class Nester:
             total_area += shape['area']
             self.shapes.append(shape)
 
-        # 如果是一般布，需要这个尺寸
-        self.shapes_max_length = total_area / BIN_HEIGHT * 3
+         #如果是一般布，需要这个尺寸
+         self.shapes_max_length = total_area / BIN_HEIGHT * 3
 
     def add_container(self, container):
         """add_container(object): adds a polygon objects as the container"""
@@ -80,9 +80,12 @@ class Nester:
             self.container = {}
 
         container = self.clean_polygon(container)
+        print('Clean Container1')
+        print(container)
 
         self.container['points'] = [{'x': p[0], 'y':p[1]} for p in container]
         self.container['p_id'] = '-1'
+
         xbinmax = self.container['points'][0]['x']
         xbinmin = self.container['points'][0]['x']
         ybinmax = self.container['points'][0]['y']
@@ -100,6 +103,8 @@ class Nester:
 
         self.container['width'] = xbinmax - xbinmin
         self.container['height'] = ybinmax - ybinmin
+        print('Clean Container2')
+        print(self.container)
         # 最小包络多边形
         self.container_bounds = nfp_utls.get_polygon_bounds(self.container['points'])
 
@@ -125,11 +130,16 @@ class Nester:
         faces = list()
         for i in range(0, len(self.shapes)):
             shape = copy.deepcopy(self.shapes[i])
+            b = copy.deepcopy(self.shapes[i])
+            # print(b)
             shape['points'] = self.polygon_offset(shape['points'], self.config['spacing'])
+            # print(shape)
             faces.append([str(i), shape])
         # build a clean copy so we don't touch the original
         # order by area
         faces = sorted(faces, reverse=True, key=lambda face: face[1]['area'])
+        print('AA')
+        #print(faces)
         return self.launch_workers(faces)
 
     def launch_workers(self, adam):
@@ -138,9 +148,12 @@ class Nester:
         :param adam:
         :return:
         """
+
+        # 生成基因组
+      
         if self.GA is None:
             offset_bin = copy.deepcopy(self.container)
-            print("yufeng Test") 
+            print("step1") 
             offset_bin['points'] = self.polygon_offset(self.container['points'], self.config['spacing'])
             self.GA = genetic_algorithm(adam, offset_bin, self.config)
         else:
@@ -178,10 +191,11 @@ class Nester:
         nfp_pairs = list()
         new_cache = dict()
         for i in range(0, len(place_list)):
+
             # 容器和图形的内切多边形计算
             part = place_list[i]
             key = {
-                'A': '-1',
+                'A': '-1', # -1表示容器 part[0]是对某一个多边形的别称，例如总共有11个图形参与排列，别称为[0..10]
                 'B': part[0],
                 'inside': True,
                 'A_rotation': 0,
@@ -198,6 +212,7 @@ class Nester:
             else:
                 # 是否已经计算过结果
                 new_cache[tmp_json_key] = self.nfp_cache[tmp_json_key]
+            print(len(nfp_pairs))
 
             # 图形与图形之间的外切多边形计算
             for j in range(0, i):
@@ -220,6 +235,9 @@ class Nester:
                     # 是否已经计算过结果
                     new_cache[tmp_json_key] = self.nfp_cache[tmp_json_key]
 
+            # 以上这两步只是做了一个创做键的行为，还并未开始计算。对象作为键，两个多边形为一个key,
+            # 第一次的时候所存放在nfp_pairs里面，self.nfp_cache为空对象
+
         # only keep cache for one cycle
         self.nfp_cache = new_cache
 
@@ -227,7 +245,11 @@ class Nester:
         self.worker = placement_worker.PlacementWorker(
              self.container, place_list, ids, rotations, self.config, self.nfp_cache)
 
+        print('BBB') # 打印下多少个键 应该是11 + 55 = 66个
+        print(len(nfp_pairs))
+
         # 计算所有图形两两组合的相切多边形（NFP）
+
         pair_list = list()
         for pair in nfp_pairs:
             pair_list.append(self.process_nfp(pair))
@@ -336,6 +358,7 @@ class Nester:
         return self.worker.place_paths()
 
     def show_result(self):
+        print('CCC')
         draw_result(self.best['placements'], self.shapes, self.container, self.container_bounds)
 
     def polygon_offset(self, polygon, offset):
@@ -382,12 +405,18 @@ def draw_result(shift_data, polygons, bin_polygon, bin_bounds):
     :return:
     """
     # 生产多边形类
+    print('result')
+    print(shift_data)
+    print(polygons)
+    print(bin_polygon)
+    print(bin_bounds)
     shapes = list()
     for polygon in polygons:
         contour = [[p['x'], p['y']] for p in polygon['points']]
         shapes.append(Polygon(contour))
 
     bin_shape = Polygon([[p['x'], p['y']] for p in bin_polygon['points']])
+    #print(bin_shape)
     shape_area = bin_shape.area(0)
 
     solution = list()
@@ -436,11 +465,17 @@ class genetic_algorithm():
             angles.append(self.random_angle(shape))
 
         # 基因群，图形顺序和图形旋转的角度作为基因编码
+        # 旋转角度不考虑 population作为种群  
+        # 第一个的个体采用从样本读入，其余的9个个体已第一个为基础，将其排列顺序改变,产生微小变异
         self.population = [{'placement': shapes, 'rotation': angles}]
+        #print(self.population)
 
         for i in range(1, self.config['populationSize']):
             mutant = self.mutate(self.population[0])
             self.population.append(mutant)
+        print("Test3")    
+        print(self.population)
+        print("Test33")
 
     def random_angle(self, shape):
         """
@@ -475,6 +510,7 @@ class genetic_algorithm():
             'placement': individual['placement'][:],
             'rotation': individual['rotation'][:]
         }
+        # 设置排列的图形顺序
         for i in range(0, len(clone['placement'])):
             if random.random() < 0.01 * self.config['mutationRate']:
                 if i+1 < len(clone['placement']):
@@ -500,7 +536,7 @@ class genetic_algorithm():
             if len(new_population) < self.config['populationSize']:
                 new_population.append(self.mutate(children[1]))
 
-        print('new :', new_population)
+        # print('new :', new_population)
         self.population = new_population
 
     def random_weighted_individual(self, exclude=None):
@@ -558,6 +594,9 @@ def minkowski_difference(A, B):
     Ac = [[p['x'], p['y']] for p in A['points']]
     Bc = [[p['x'] * -1, p['y'] * -1] for p in B['points']]
     solution = pyclipper.MinkowskiSum(Ac, Bc, True)
+    # print('DDD')
+    # print(A)
+    # print(B)
     largest_area = None
     clipper_nfp = None
     for p in solution:
@@ -571,6 +610,7 @@ def minkowski_difference(A, B):
                     'x': clipper_nfp[i]['x'] + Bc[0][0] * -1,
                     'y':clipper_nfp[i]['y'] + Bc[0][1] * -1
                    } for i in range(0, len(clipper_nfp))]
+    print(clipper_nfp)
     return [clipper_nfp]
 
 
@@ -606,7 +646,7 @@ def draw_polygon_png(solution, bin_bounds, bin_shape, path=None):
 
 
 def draw_polygon(solution, rates, bin_bounds, bin_shape):
-    base_width = 8
+    base_width = 9
     base_height = base_width * bin_bounds['height'] / bin_bounds['width']
     num_bin = len(solution)
     fig_height = num_bin * base_height
@@ -636,6 +676,7 @@ def draw_polygon(solution, rates, bin_bounds, bin_shape):
 
 
 def content_loop_rate(best, n, loop_time=20):
+  
     """
     固定迭代次数
     :param best:
@@ -648,15 +689,20 @@ def content_loop_rate(best, n, loop_time=20):
     while run_time:
         n.run()
         best = n.best
-        print(best['fitness'])
         if best['fitness'] <= res['fitness']:
             res = best
-            print('change', res['fitness'])
+           # print('change', res['fitness'])
         run_time -= 1
+    # print('DDDD')
+    # print(res['placements'])
+    # print(n.shapes)
+    # print(n.container)
+    # print(n.container_bounds)
     draw_result(res['placements'], n.shapes, n.container, n.container_bounds)
 
 
 def set_target_loop(best, nest):
+    print('CCC')
     """
     把所有图形全部放下就退出
     :param best: 一个运行结果

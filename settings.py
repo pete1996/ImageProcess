@@ -7,7 +7,5 @@ ROTATIONS = 1    # 旋转选择， 1： 不能旋转
 SPACING = 2      # 图形间隔空间
 # 不同面料尺寸
 BIN_HEIGHT = 1400
-BIN_WIDTH = 3000
-BIN_NORMAL = [[0, 0], [0, BIN_HEIGHT], [BIN_WIDTH, BIN_HEIGHT], [BIN_WIDTH, 0]]        # 一般布是无限长
-BIN_CUT_BIG = [[0, 0], [0, 1570], [2500, 1570], [2500, 0]]       # 切割机尺寸 1
-BIN_CUT_SMALL = [[0, 0], [0, 1200], [1500, 1200], [1500, 0]]     # # 切割机尺寸 2
+BIN_WIDTH = 4000
+BIN_NORMAL = [[0, 0], [0, 1400],[4000, 1400], [4000, 0]] # 一般布是无限长
