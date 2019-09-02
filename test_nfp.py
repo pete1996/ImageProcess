@@ -6,7 +6,7 @@ from settings import BIN_WIDTH, BIN_NORMAL
 
 if __name__ == '__main__':
     n = Nester()
-    s = input_utls.input_polygon('dxf_file/3.dxf')
+    s = input_utls.input_polygon('dxf_file/TE3.dxf')
     n.add_objects(s)
 
     if n.shapes_max_length > BIN_WIDTH:

@@ -80,8 +80,8 @@ class Nester:
             self.container = {}
 
         container = self.clean_polygon(container)
-        print('Clean Container1')
-        print(container)
+        #print('Clean Container1')
+        #print(container)
 
         self.container['points'] = [{'x': p[0], 'y':p[1]} for p in container]
         self.container['p_id'] = '-1'
@@ -104,7 +104,7 @@ class Nester:
         self.container['width'] = xbinmax - xbinmin
         self.container['height'] = ybinmax - ybinmin
         print('Clean Container2')
-        print(self.container)
+        #print(self.container)
         # 最小包络多边形
         self.container_bounds = nfp_utls.get_polygon_bounds(self.container['points'])
 
@@ -138,7 +138,7 @@ class Nester:
         # build a clean copy so we don't touch the original
         # order by area
         faces = sorted(faces, reverse=True, key=lambda face: face[1]['area'])
-        print('AA')
+        #print('AA')
         #print(faces)
         return self.launch_workers(faces)
 
@@ -153,7 +153,7 @@ class Nester:
       
         if self.GA is None:
             offset_bin = copy.deepcopy(self.container)
-            print("step1") 
+            #print("step1") 
             offset_bin['points'] = self.polygon_offset(self.container['points'], self.config['spacing'])
             self.GA = genetic_algorithm(adam, offset_bin, self.config)
         else:
@@ -212,7 +212,7 @@ class Nester:
             else:
                 # 是否已经计算过结果
                 new_cache[tmp_json_key] = self.nfp_cache[tmp_json_key]
-            print(len(nfp_pairs))
+            #print(len(nfp_pairs))
 
             # 图形与图形之间的外切多边形计算
             for j in range(0, i):
@@ -245,8 +245,6 @@ class Nester:
         self.worker = placement_worker.PlacementWorker(
              self.container, place_list, ids, rotations, self.config, self.nfp_cache)
 
-        print('BBB') # 打印下多少个键 应该是11 + 55 = 66个
-        print(len(nfp_pairs))
 
         # 计算所有图形两两组合的相切多边形（NFP）
 
@@ -358,7 +356,6 @@ class Nester:
         return self.worker.place_paths()
 
     def show_result(self):
-        print('CCC')
         draw_result(self.best['placements'], self.shapes, self.container, self.container_bounds)
 
     def polygon_offset(self, polygon, offset):
@@ -405,11 +402,6 @@ def draw_result(shift_data, polygons, bin_polygon, bin_bounds):
     :return:
     """
     # 生产多边形类
-    print('result')
-    print(shift_data)
-    print(polygons)
-    print(bin_polygon)
-    print(bin_bounds)
     shapes = list()
     for polygon in polygons:
         contour = [[p['x'], p['y']] for p in polygon['points']]
@@ -473,9 +465,6 @@ class genetic_algorithm():
         for i in range(1, self.config['populationSize']):
             mutant = self.mutate(self.population[0])
             self.population.append(mutant)
-        print("Test3")    
-        print(self.population)
-        print("Test33")
 
     def random_angle(self, shape):
         """
@@ -610,7 +599,7 @@ def minkowski_difference(A, B):
                     'x': clipper_nfp[i]['x'] + Bc[0][0] * -1,
                     'y':clipper_nfp[i]['y'] + Bc[0][1] * -1
                    } for i in range(0, len(clipper_nfp))]
-    print(clipper_nfp)
+    #print(clipper_nfp)
     return [clipper_nfp]
 
 
@@ -652,7 +641,7 @@ def draw_polygon(solution, rates, bin_bounds, bin_shape):
     fig_height = num_bin * base_height
     # fig1 = Figure(figsize=(base_width, fig_height))
     # FigureCanvas(fig1)
-    fig1 = plt.figure(figsize=(base_width, fig_height))
+    fig1 = plt.figure(figsize=(base_width, fig_height + 1))
     fig1.suptitle('Polygon packing', fontweight='bold')
 
     i_pic = 1  # 记录图片的索引
@@ -702,7 +691,6 @@ def content_loop_rate(best, n, loop_time=20):
 
 
 def set_target_loop(best, nest):
-    print('CCC')
     """
     把所有图形全部放下就退出
     :param best: 一个运行结果

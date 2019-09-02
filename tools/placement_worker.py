@@ -16,9 +16,6 @@ class PlacementWorker():
 
     def place_paths(self):
 
-        print('Test4')
-        #print(self.paths)
-        #print(self.ids)
         # 排列图形
         if self.bin_polygon is None:
             return None
@@ -125,8 +122,6 @@ class PlacementWorker():
                     continue
 
                 clipper = pyclipper.Pyclipper()
-                print('test6')
-                print(clipper_bin_nfp)
                 clipper.AddPaths(combine_nfp, pyclipper.PT_CLIP, True)
                 try:
                     clipper.AddPaths(clipper_bin_nfp, pyclipper.PT_SUBJECT, True)
@@ -146,7 +141,6 @@ class PlacementWorker():
                         continue
 
                 finalNfp = [[{'x': p[0], 'y': p[1]}for p in polygon] for polygon in finalNfp]
-                print('Test5')
                 #print(self.nfpCache)
                 #print(finalNfp)
 
